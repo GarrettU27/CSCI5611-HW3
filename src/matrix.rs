@@ -4,13 +4,11 @@ use std::ops;
 pub struct InvalidArgumentError;
 
 #[derive(Debug)]
-pub struct Matrix<T> 
-where T: ops::Add<Output = T> + ops::Mul<Output = T> + ToOwned<Owned = T> + Clone + Default {
+pub struct Matrix<T> {
     rows: Vec<Vec<T>>
 }
 
-impl<T> Matrix<T>
-where T: ops::Add<Output = T> + ops::Mul<Output = T> + ToOwned<Owned = T> + Clone + Default {
+impl<T> Matrix<T> {
     pub fn new(rows: Vec<Vec<T>>) -> Result<Self, InvalidArgumentError> {
         let row_length = rows.first().ok_or(InvalidArgumentError)?.len();
 
@@ -23,13 +21,28 @@ where T: ops::Add<Output = T> + ops::Mul<Output = T> + ToOwned<Owned = T> + Clon
         Ok(Matrix { rows })
     }
 
+    pub fn row_num(&self) -> usize {
+        self.rows.len()
+    }
+
+    pub fn val(&self, i: usize, j: usize) -> Option<&T> {
+        if let Some(row) = self.rows.get(i) {
+            return row.get(j)
+        }
+
+        None
+    }
+
+    pub fn col_num(&self) -> usize {
+        self.rows.first().unwrap().len()
+    }
+}
+
+impl<T> Matrix<T> 
+where T: Clone + ToOwned<Owned = T> {
     pub fn row(&self, i: usize) -> Vec<T> {
         let row_slice = self.rows.get(i).unwrap();
         row_slice.to_owned()
-    }
-
-    pub fn row_num(&self) -> usize {
-        self.rows.len()
     }
 
     pub fn col(&self, j: usize) -> Vec<T> {
@@ -42,11 +55,10 @@ where T: ops::Add<Output = T> + ops::Mul<Output = T> + ToOwned<Owned = T> + Clon
 
         col
     }
+}
 
-    pub fn col_num(&self) -> usize {
-        self.rows.first().unwrap().len()
-    }
-
+impl<T> Matrix<T>
+where T: ops::Add<Output = T> + ops::Mul<Output = T> + ToOwned<Owned = T> + Clone + Default {
     pub fn mul(&self, rhs: &Self) -> Result<Self, InvalidArgumentError> {
         if self.col_num() != rhs.row_num() {
             return Err(InvalidArgumentError);
@@ -68,15 +80,45 @@ where T: ops::Add<Output = T> + ops::Mul<Output = T> + ToOwned<Owned = T> + Clon
 
         Ok(Matrix{ rows })
     }
+}
 
-    pub fn val(&self, i: usize, j: usize) -> T {
-        self.rows.get(i).unwrap().get(j).unwrap().to_owned()
+impl <'a, T> Matrix<T> {
+    pub fn iter(&'a self) -> MatrixIntoIterator<'a, T> {
+        MatrixIntoIterator {
+            matrix: self,
+            index: 0
+        }
+    }
+}
+
+impl<'a, T> IntoIterator for &'a Matrix<T> {
+    type Item = &'a T;
+    type IntoIter = MatrixIntoIterator<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct MatrixIntoIterator<'a, T> {
+    matrix: &'a Matrix<T>,
+    index: usize
+}
+
+impl<'a, T> Iterator for MatrixIntoIterator<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let col_num = self.matrix.col_num();
+        let val = self.matrix.val(self.index / col_num, self.index % col_num);
+        self.index += 1;
+
+        val
     }
 }
 
 pub fn dot<T>(lhs: &[T], rhs: &[T]) -> Result<T, InvalidArgumentError>
-where 
-    T: ops::Add<Output = T> + ops::Mul<Output = T> + Default + ToOwned<Owned = T>, {
+where T: ops::Add<Output = T> + ops::Mul<Output = T> + Default + ToOwned<Owned = T>, {
     let mut sum = T::default();
 
     for i in 0..lhs.len() {

@@ -24,6 +24,12 @@ impl NeuralNetwork {
     }
 }
 
+fn relu_matrix<T>(x: Matrix<T>) {
+    for val in &x {
+        
+    }
+}
+
 fn relu(x: isize) -> isize {
     if x > 0 {
         x

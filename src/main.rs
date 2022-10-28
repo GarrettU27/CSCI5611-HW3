@@ -21,5 +21,9 @@ fn main() {
 
     print!("{:?}", c);
 
+    for val in &c {
+        println!("c value: {}", val);
+    }
+
     println!("Hello, world!");
 }
