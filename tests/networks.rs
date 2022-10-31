@@ -19,12 +19,9 @@ fn proper_outputs_for_networks() {
 
     for line_result in lines {
         if let Ok(line) = line_result {
-            // println!("{}", line);
-
             if line == "" {
-                let neural_network =
-                    NeuralNetwork::new(use_relu.clone(), weights.clone(), biases.clone())
-                        .expect("Unable to create proper neural network!");
+                let neural_network = NeuralNetwork::new(use_relu, weights, biases)
+                    .expect("Unable to create proper neural network!");
                 let calculated_output = neural_network
                     .compute_output(input)
                     .expect("Unable to compute output!");
@@ -34,6 +31,7 @@ fn proper_outputs_for_networks() {
                 weights = Vec::new();
                 biases = Vec::new();
                 use_relu = Vec::new();
+
                 input = Matrix { rows: Vec::new() };
                 output = Matrix { rows: Vec::new() };
 
@@ -68,7 +66,7 @@ fn proper_outputs_for_networks() {
         }
     }
 
-    let neural_network = NeuralNetwork::new(use_relu.clone(), weights.clone(), biases.clone())
+    let neural_network = NeuralNetwork::new(use_relu, weights, biases)
         .expect("Unable to create proper neural network!");
     let calculated_output = neural_network
         .compute_output(input)
